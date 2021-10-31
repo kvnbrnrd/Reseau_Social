@@ -49,14 +49,14 @@ const userSchema = new mongoose.Schema(
     }
 )
 
-// play function before save into DB
+// Before saving the password into the DB, the password is hashed.
 userSchema.pre("save", async function(next) {
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(this.password, salt);
     next();
 })
 
-// Comparaison password entré avec password hashé dans BDD
+// When the user logs in, if the email matches, bcrypt compares the password entered and the hashes password stored in the DB.
 userSchema.statics.login = async function (email,password) {
     const user = await this.findOne({email});
     if (user) {

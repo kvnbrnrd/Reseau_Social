@@ -1,11 +1,14 @@
 const UserModel = require("../models/user.model");
 const ObjectID = require("mongoose").Types.ObjectId;
 
+
+// Displays all users (GET request, /)
 module.exports.getAllUsers = async (req, res) => {
   const users = await UserModel.find().select("-password");
   res.status(200).json(users);
 };
 
+// Displays the user corresponding to the provided ID, minus the password (GET request, /:id)
 module.exports.userInfo = (req, res) => {
   if (!ObjectID.isValid(req.params.id))
     return res.status(400).send("ID unknown : " + req.params.id);
@@ -16,6 +19,7 @@ module.exports.userInfo = (req, res) => {
   }).select("-password");
 };
 
+// Finds the user by id, sets the bio with the content of the request (PUT request, /:id)
 module.exports.updateUser = async (req, res) => {
   if (!ObjectID.isValid(req.params.id))
     return res.status(400).send("ID unknown : " + req.params.id);
@@ -39,6 +43,7 @@ module.exports.updateUser = async (req, res) => {
   }
 };
 
+// Finds the user by id, and removes it from the DB (DELETE request, /:id)
 module.exports.deleteUser = async (req, res) => {
   if (!ObjectID.isValid(req.params.id))
     return res.status(400).send("ID unknown : " + req.params.id);
@@ -51,6 +56,7 @@ module.exports.deleteUser = async (req, res) => {
   }
 };
 
+// Finds the user by id in the URL parameter, stores the ID of the user to follow in the body request (PATCH request, /:id)
 module.exports.follow = async (req, res) => {
   if (
     !ObjectID.isValid(req.params.id) ||
@@ -59,7 +65,7 @@ module.exports.follow = async (req, res) => {
     return res.status(400).send("ID unknown : " + req.params.id);
 
   try {
-    // add to the follower list
+    // Adds the ID of the user to follow in the "following" array of the user making the request
     await UserModel.findByIdAndUpdate(
       req.params.id,
       { $addToSet: { following: req.body.idToFollow } },
@@ -69,7 +75,7 @@ module.exports.follow = async (req, res) => {
         else return res.status(400).jsos(err);
       }
     );
-    // add to following list
+    // Adds the ID of the user who made the follow request to the "followers" array of the user followed
     await UserModel.findByIdAndUpdate(
       req.body.idToFollow,
       { $addToSet: { followers: req.params.id } },
@@ -84,6 +90,7 @@ module.exports.follow = async (req, res) => {
   }
 };
 
+// Finds the user by id in the URL parameter, stores the ID of the user to follow in the body request (PATCH request, /:id)
 module.exports.unfollow = async (req, res) => {
   if (
     !ObjectID.isValid(req.params.id) ||
@@ -92,6 +99,7 @@ module.exports.unfollow = async (req, res) => {
     return res.status(400).send("ID unknown : " + req.params.id);
 
   try {
+    // Removes the ID of the user to follow in the "following" array of the user making the request
     await UserModel.findByIdAndUpdate(
       req.params.id,
       { $pull: { following: req.body.idToUnfollow } },
@@ -101,7 +109,7 @@ module.exports.unfollow = async (req, res) => {
         else return res.status(400).jsos(err);
       }
     );
-    // remove to following list
+    // Removes the ID of the user who made the follow request to the "followers" array of the user previously followed
     await UserModel.findByIdAndUpdate(
       req.body.idToUnfollow,
       { $pull: { followers: req.params.id } },

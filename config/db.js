@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Required parameters so the earlier version of Mongoose works without any errors.
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);

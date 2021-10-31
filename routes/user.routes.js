@@ -2,12 +2,12 @@ const router = require("express").Router();
 const authController = require("../controllers/auth.controller");
 const userController = require("../controllers/user.controller");
 
-// auth
+// Authentication (auth.controller.js)
 router.post("/register", authController.signUp);
 router.post("/login", authController.signIn);
 router.get("/logout", authController.logout);
 
-// userDB
+// Modifying the user data in the DB (user.controller.js)
 router.get('/', userController.getAllUsers);
 router.get('/:id', userController.userInfo);
 router.put("/:id", userController.updateUser);
