@@ -3,8 +3,8 @@ const UserModel = require("../models/user.model");
 const ObjectID = require('mongoose').Types.ObjectId;
 
 // Displays a post (GET request, /)
-module.exports.readPost = (req,res) => {
-    PostModel.find((err,docs) => {
+module.exports.readPost = (req, res) => {
+    PostModel.find((err, docs) => {
         if (!err) {
             res.send(docs);
         } else {
@@ -14,7 +14,7 @@ module.exports.readPost = (req,res) => {
 }
 
 // Creates a post, needs posterId, message, video, likers and comments as required parameters (POST request, /)
-module.exports.createPost = async (req,res) => {
+module.exports.createPost = async (req, res) => {
     const newPost = new PostModel({
         posterId: req.body.posterId,
         message: req.body.message,
@@ -32,7 +32,7 @@ module.exports.createPost = async (req,res) => {
 }
 
 // Updates the message of the post (PUT request, /:id (id of the post))
-module.exports.updatePost = (req,res) => {
+module.exports.updatePost = (req, res) => {
     if (!ObjectID.isValid(req.params.id)) {
         return res.status(400).send("ID unknown : " + req.params.id);
     }
@@ -43,9 +43,9 @@ module.exports.updatePost = (req,res) => {
 
     PostModel.findByIdAndUpdate(
         req.params.id,
-        {$set:updatedRecord},
-        {new: true},
-        (err,docs) => {
+        { $set: updatedRecord },
+        { new: true },
+        (err, docs) => {
             if (!err) {
                 res.send(docs);
             } else {
@@ -56,16 +56,92 @@ module.exports.updatePost = (req,res) => {
 }
 
 // Deletes the whole post (DELETE request, /:id (id of the post))
-module.exports.deletePost = (req,res) => {
+module.exports.deletePost = (req, res) => {
     if (!ObjectID.isValid(req.params.id)) {
         return res.status(400).send("ID unknown : " + req.params.id);
     }
 
-    PostModel.findByIdAndRemove(req.params.id,(err,docs) => {
-            if(!err) {
-                res.send(docs);
-            } else {
-                console.log("Delete error : " + err);
-            }
-        });
+    PostModel.findByIdAndRemove(req.params.id, (err, docs) => {
+        if (!err) {
+            res.send(docs);
+        } else {
+            console.log("Delete error : " + err);
+        }
+    });
 };
+
+
+module.exports.likePost = async (req, res) => {
+    if (!ObjectID.isValid(req.params.id))
+      return res.status(400).send("ID unknown : " + req.params.id);
+  
+    try {
+      await PostModel.findByIdAndUpdate(
+        req.params.id,
+        {
+          $addToSet: { likers: req.body.id },
+        },
+        { new: true },
+        (err, docs) => {
+          if (err) {
+            return res.status(400).send(err);
+          } 
+        }
+      );
+      await UserModel.findByIdAndUpdate(
+        req.body.id,
+        {
+          $addToSet: { likes: req.params.id },
+        },
+        { new: true },
+        (err, docs) => {
+          if (!err) {
+            res.send(docs); 
+          } 
+          else {
+              return res.status(400).send(err);
+          }
+        }
+      );
+    } catch (err) {
+      return res.status(400).send(err);
+    }
+  };
+
+module.exports.unlikePost = async (req, res) => {
+    if (!ObjectID.isValid(req.params.id)) {
+        return res.status(400).send("ID unknown : " + req.params.id);
+    }
+
+    try {
+        await PostModel.findByIdAndUpdate(
+          req.params.id,
+          {
+            $pull: { likers: req.body.id },
+          },
+          { new: true },
+          (err, docs) => {
+            if (err) {
+              return res.status(400).send(err);
+            } 
+          }
+        );
+        await UserModel.findByIdAndUpdate(
+          req.body.id,
+          {
+            $pull: { likes: req.params.id },
+          },
+          { new: true },
+          (err, docs) => {
+            if (!err) {
+              res.send(docs); 
+            } 
+            else {
+                return res.status(400).send(err);
+            }
+          }
+        );
+      } catch (err) {
+        return res.status(400).send(err);
+      }
+}
