@@ -13,7 +13,7 @@ module.exports.readPost = (req,res) => {
     })
 }
 
-// Creates a post (POST request, /)
+// Creates a post, needs posterId, message, video, likers and comments as required parameters (POST request, /)
 module.exports.createPost = async (req,res) => {
     const newPost = new PostModel({
         posterId: req.body.posterId,
@@ -31,7 +31,7 @@ module.exports.createPost = async (req,res) => {
     }
 }
 
-
+// Updates the message of the post (PUT request, /:id (id of the post))
 module.exports.updatePost = (req,res) => {
     if (!ObjectID.isValid(req.params.id)) {
         return res.status(400).send("ID unknown : " + req.params.id);
@@ -55,7 +55,7 @@ module.exports.updatePost = (req,res) => {
     )
 }
 
-
+// Deletes the whole post (DELETE request, /:id (id of the post))
 module.exports.deletePost = (req,res) => {
     if (!ObjectID.isValid(req.params.id)) {
         return res.status(400).send("ID unknown : " + req.params.id);
