@@ -10,7 +10,7 @@ module.exports.readPost = (req, res) => {
         } else {
             console.log('Failure to get data :' + err)
         }
-    })
+    }).sort({createdAt: -1});
 }
 
 // Creates a post, needs posterId, message, video, likers and comments as required parameters (POST request, /)
@@ -70,7 +70,7 @@ module.exports.deletePost = (req, res) => {
     });
 };
 
-
+// Allows the user to like a post, and populates both the likers array of the post, and the likes array of the user. (PATCH request, /like-post/:id)
 module.exports.likePost = async (req, res) => {
     if (!ObjectID.isValid(req.params.id))
       return res.status(400).send("ID unknown : " + req.params.id);
@@ -108,6 +108,7 @@ module.exports.likePost = async (req, res) => {
     }
   };
 
+  // Allows the user to unlike a post, and removes both in the likers array of the post, and in the likes array of the user. (PATCH request, /unlike-post/:id)
 module.exports.unlikePost = async (req, res) => {
     if (!ObjectID.isValid(req.params.id)) {
         return res.status(400).send("ID unknown : " + req.params.id);
@@ -144,4 +145,45 @@ module.exports.unlikePost = async (req, res) => {
       } catch (err) {
         return res.status(400).send(err);
       }
+}
+
+// Allows the users to comment posts, pushes a comments object into the post so the comment is added without altering the previous comments. (PATCH request, /comment-post/:id)
+module.exports.commentPost = (req,res) => {
+    if (!ObjectID.isValid(req.params.id)) {
+        return res.status(400).send("ID unknown : " + req.params.id);
+    }
+
+    try {
+        return PostModel.findByIdAndUpdate(
+            req.params.id,
+            {
+                $push: {
+                    comments: {
+                        commenterId: req.body.commenterId,
+                        commenterPseudo: req.body.commenterPseudo,
+                        text: req.body.text,
+                        timestamp: new Date().getTime()
+                    },
+                },
+            },
+            {new:true},
+            (err,docs) => {
+                if (!err) {
+                    res.send(docs)
+                } else {
+                    return res.status(400).send(err);
+                }
+            }
+        );
+    } catch (err) {
+        return res.status(400).send(err);
+    }
+};
+
+module.exports.editCommentPost = (req,res) => {
+    
+}
+
+module.exports.deleteCommentPost = (req,res) => {
+    
 }
