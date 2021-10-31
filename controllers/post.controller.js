@@ -180,10 +180,60 @@ module.exports.commentPost = (req,res) => {
     }
 };
 
-module.exports.editCommentPost = (req,res) => {
-    
-}
+// Allows the user to edit a comment, iterates through the comments array to find the matching comment _id and updates the comment body. (PATCH request, /edit-comment-post/:id)
+module.exports.editCommentPost = (req, res) => {
+    if (!ObjectID.isValid(req.params.id))
+      return res.status(400).send("ID unknown : " + req.params.id);
+  
+    try {
+      return PostModel.findById(req.params.id, (err, docs) => {
+        const theComment = docs.comments.find((comment) =>
+          comment._id.equals(req.body.commentId)
+        );
+  
+        if (!theComment) {
+            return res.status(404).send("Comment not found");
+        } 
+        theComment.text = req.body.text;
+  
+        return docs.save((err) => {
+          if (!err) {
+            return res.status(200).send(docs);  
+          } 
+          return res.status(500).send(err);
+        });
+      });
+    } catch (err) {
+      return res.status(400).send(err);
+    }
+  };
 
+// Iterates through the comments array from the post and removes the comment matching with the _id. (PATCH request, /delete-comment-post/:id)
 module.exports.deleteCommentPost = (req,res) => {
-    
-}
+    if (!ObjectID.isValid(req.params.id)) {
+        return res.status(400).send("ID unknown : " + req.params.id);
+    }
+
+    try {
+        return PostModel.findByIdAndUpdate(
+            req.params.id,
+            {
+                $pull: {
+                    comments: {
+                        _id: req.body.commentId,
+                    },
+                },
+            },
+            {new: true},
+            (err,docs) => {
+                if (!err) {
+                    return res.send(docs);
+                } else {
+                    return res.status(400).send(err);
+                }
+            }
+        );
+    } catch (err) {
+        return res.status(400).send(err);
+    }
+};
