@@ -10,19 +10,25 @@ module.exports.getAllUsers = async (req, res) => {
 
 // Displays the user corresponding to the provided ID, minus the password (GET request, /:id)
 module.exports.userInfo = (req, res) => {
-  if (!ObjectID.isValid(req.params.id))
+  if (!ObjectID.isValid(req.params.id)) {
     return res.status(400).send("ID unknown : " + req.params.id);
+  }
 
   UserModel.findById(req.params.id, (err, docs) => {
-    if (!err) res.send(docs);
-    else console.log("ID unknown : " + err);
+    if (!err) {
+      res.send(docs);
+    } 
+    else {
+      console.log("ID unknown : " + err);
+    } 
   }).select("-password");
 };
 
 // Finds the user by id, sets the bio with the content of the request (PUT request, /:id)
 module.exports.updateUser = async (req, res) => {
-  if (!ObjectID.isValid(req.params.id))
+  if (!ObjectID.isValid(req.params.id)) {
     return res.status(400).send("ID unknown : " + req.params.id);
+  }
 
   try {
     await UserModel.findOneAndUpdate(
@@ -34,8 +40,12 @@ module.exports.updateUser = async (req, res) => {
       },
       { new: true, upsert: true, useFindAndModify: false, setDefaultsOnInsert: true },
       (err, docs) => {
-        if (!err) return res.send(docs);
-        if (err) return res.status(500).send({ message: err });
+        if (!err) {
+          return res.send(docs);
+        } 
+        if (err) {
+          return res.status(500).send({ message: err });
+        }
       }
     );
   } catch (err) {
@@ -45,8 +55,9 @@ module.exports.updateUser = async (req, res) => {
 
 // Finds the user by id, and removes it from the DB (DELETE request, /:id)
 module.exports.deleteUser = async (req, res) => {
-  if (!ObjectID.isValid(req.params.id))
+  if (!ObjectID.isValid(req.params.id)) {
     return res.status(400).send("ID unknown : " + req.params.id);
+  }
 
   try {
     await UserModel.remove({ _id: req.params.id }).exec();
@@ -58,11 +69,10 @@ module.exports.deleteUser = async (req, res) => {
 
 // Finds the user by id in the URL parameter, stores the ID of the user to follow in the body request (PATCH request, /:id)
 module.exports.follow = async (req, res) => {
-  if (
-    !ObjectID.isValid(req.params.id) ||
-    !ObjectID.isValid(req.body.idToFollow)
-  )
+  if (!ObjectID.isValid(req.params.id) ||!ObjectID.isValid(req.body.idToFollow)) {
     return res.status(400).send("ID unknown : " + req.params.id);
+  }
+
 
   try {
     // Adds the ID of the user to follow in the "following" array of the user making the request
@@ -71,8 +81,12 @@ module.exports.follow = async (req, res) => {
       { $addToSet: { following: req.body.idToFollow } },
       { new: true, upsert: true, useFindAndModify: false },
       (err, docs) => {
-        if (!err) res.status(201).json(docs);
-        else return res.status(400).jsos(err);
+        if (!err) {
+          res.status(201).json(docs);
+        } 
+        else {
+          return res.status(400).json(err);
+        } 
       }
     );
     // Adds the ID of the user who made the follow request to the "followers" array of the user followed
@@ -82,7 +96,9 @@ module.exports.follow = async (req, res) => {
       { new: true, upsert: true, useFindAndModify: false },
       (err, docs) => {
         // if (!err) res.status(201).json(docs);
-        if (err) return res.status(400).jsos(err);
+        if (err) {
+          return res.status(400).json(err);
+        } 
       }
     );
   } catch (err) {
@@ -92,11 +108,9 @@ module.exports.follow = async (req, res) => {
 
 // Finds the user by id in the URL parameter, stores the ID of the user to follow in the body request (PATCH request, /:id)
 module.exports.unfollow = async (req, res) => {
-  if (
-    !ObjectID.isValid(req.params.id) ||
-    !ObjectID.isValid(req.body.idToUnfollow)
-  )
+  if (!ObjectID.isValid(req.params.id) ||!ObjectID.isValid(req.body.idToUnfollow)) {
     return res.status(400).send("ID unknown : " + req.params.id);
+  }
 
   try {
     // Removes the ID of the user to follow in the "following" array of the user making the request
@@ -105,8 +119,12 @@ module.exports.unfollow = async (req, res) => {
       { $pull: { following: req.body.idToUnfollow } },
       { new: true, upsert: true },
       (err, docs) => {
-        if (!err) res.status(201).json(docs);
-        else return res.status(400).jsos(err);
+        if (!err) {
+          res.status(201).json(docs);
+        } 
+        else {
+          return res.status(400).json(err);
+        } 
       }
     );
     // Removes the ID of the user who made the follow request to the "followers" array of the user previously followed
@@ -116,7 +134,9 @@ module.exports.unfollow = async (req, res) => {
       { new: true, upsert: true },
       (err, docs) => {
         // if (!err) res.status(201).json(docs);
-        if (err) return res.status(400).jsos(err);
+        if (err) {
+          return res.status(400).json(err);
+        } 
       }
     );
   } catch (err) {
