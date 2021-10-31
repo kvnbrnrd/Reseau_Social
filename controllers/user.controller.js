@@ -1,17 +1,17 @@
-const userModel = require("../models/user.model");
-const objectID = require("mongoose").Types.ObjectId;
+const UserModel = require("../models/user.model");
+const ObjectID = require("mongoose").Types.ObjectId;
 
 module.exports.getAllUsers = async (req,res) => {
-    const users = await userModel.find().select('-password');
+    const users = await UserModel.find().select('-password');
     res.status(200).json(users);
 }
 
 module.exports.userInfo = (req, res) => {
-    if (!objectID.isValid(req.params.id)) {
+    if (!ObjectID.isValid(req.params.id)) {
         return res.status(400).send('ID unknown : ' + req.params.id)
     }
 
-    userModel.findById(req.params.id, (err,docs) => {
+    UserModel.findById(req.params.id, (err,docs) => {
         if (!err) {
             res.send(docs)
         } else {
@@ -19,3 +19,43 @@ module.exports.userInfo = (req, res) => {
         }
     }).select('-password');
 };
+
+module.exports.updateUser = async (req,res) => {
+    if (!ObjectID.isValid(req.params.id)) {
+        return res.status(400).send('ID unknown : ' + req.params.id)
+    }
+
+    try {
+        await UserModel.findOneAndUpdate(
+            {_id: req.params.id},
+            {
+                $set: {
+                    bio: req.body.bio,
+                },
+            },
+            {new: true, upsert: true, setDefaultsOnInsert: true},
+            (err,docs) => {
+                if(!err) {
+                    return res.send(docs);
+                }
+                if (err) {
+                    return res.status(500).send({message : err});
+                }
+            }
+        )
+    } catch (err) {
+        // return res.status(500).json({message : err}) commenté pour éviter temporairement l'erreur [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+    }
+}
+
+module.exports.deleteUser = async (req,res) => {
+    if (!ObjectID.isValid(req.params.id)) {
+        return res.status(400).send('ID unknown : ' + req.params.id)
+    }
+    try {
+        await UserModel.remove({_id: req.params.id}).exec();
+        res.status(200).json({message : "Successfully deleted."})
+    } catch (err) {
+        return res.status(500).json({message : err})
+    }
+}
